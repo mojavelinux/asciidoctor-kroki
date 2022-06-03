@@ -92,7 +92,7 @@ module AsciidoctorExtensions
         require 'open-uri'
         ::OpenURI.open_uri(target, &:read)
       else
-        File.open(target, &:read)
+        File.read(target, mode: 'rb:utf-8:utf-8')
       end
     end
 
@@ -297,13 +297,16 @@ module AsciidoctorExtensions
                    'binary'
                  end
       # file is either (already) on the file system or we should read it from Kroki
-      contents = File.exist?(file_path) ? File.open(file_path, &:read) : kroki_client.get_image(self, encoding)
-      FileUtils.mkdir_p(output_dir_path)
-      if encoding == 'binary'
-        File.binwrite(file_path, contents)
-      else
-        File.write(file_path, contents)
+      unless File.exist?(file_path)
+        contents = kroki_client.get_image(self, encoding)
+        FileUtils.mkdir_p(output_dir_path)
+        if encoding == 'binary'
+          File.binwrite(file_path, contents)
+        else
+          File.write(file_path, contents)
+        end
       end
+
       diagram_name
     end
 
